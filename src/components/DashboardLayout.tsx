@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { Layout, Menu, Button, Typography, Space, Drawer, Grid, Avatar, Divider } from 'antd';
+import { Layout, Menu, Button, Typography, Space, Drawer, Grid, Avatar, Divider, Modal, Form, Input, message } from 'antd';
 import { 
     LogoutOutlined, 
     SafetyCertificateOutlined, 
@@ -10,10 +10,12 @@ import {
     TeamOutlined,
     HistoryOutlined,
     BarChartOutlined,
-    SettingOutlined
+    SettingOutlined,
+    LockOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../api/axios';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -42,6 +44,8 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
     const { user, logout } = useAuth();
     const [collapsed, setCollapsed] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [settingsVisible, setSettingsVisible] = useState(false);
+    const [pwForm] = Form.useForm();
     const localUser = JSON.parse(localStorage.getItem('user') || '{}');
     const currentUser = user || localUser;
     const role = currentUser.role;
@@ -49,6 +53,20 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleChangePassword = async (values: any) => {
+        try {
+            await api.put('/auth/change-password', {
+                oldPassword: values.oldPassword,
+                newPassword: values.newPassword,
+            });
+            message.success('Đổi mật khẩu thành công!');
+            setSettingsVisible(false);
+            pwForm.resetFields();
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Lỗi đổi mật khẩu');
+        }
     };
 
     // ─── Build menu based on role ─────────────────────────
@@ -145,8 +163,11 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
                                 size="small" 
                                 icon={<SettingOutlined />}
                                 onClick={() => {
-                                    navigate(role === 'student' ? '/student/settings' : '/admin/settings-profile');
-                                    window.dispatchEvent(new CustomEvent('open-profile-settings'));
+                                    if (role === 'student') {
+                                        navigate('/student/settings');
+                                    } else {
+                                        setSettingsVisible(true);
+                                    }
                                     if (isMobile) setDrawerVisible(false);
                                 }}
                                 style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, padding: '0 6px' }}
@@ -307,6 +328,57 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
                     </div>
                 </Content>
             </Layout>
+
+            {/* Settings Modal */}
+            <Modal
+                title="Cài đặt tài khoản"
+                open={settingsVisible}
+                onCancel={() => { setSettingsVisible(false); pwForm.resetFields(); }}
+                footer={null}
+                width={420}
+            >
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                    <Avatar 
+                        size={80} 
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`}
+                        style={{ border: '3px solid #1890ff', marginBottom: 12 }}
+                    />
+                    <div>
+                        <Text strong style={{ fontSize: 18, display: 'block' }}>{currentUser.name}</Text>
+                        <Text type="secondary">@{currentUser.username}</Text>
+                    </div>
+                </div>
+
+                <Divider>Đổi mật khẩu</Divider>
+
+                <Form form={pwForm} layout="vertical" onFinish={handleChangePassword}>
+                    <Form.Item name="oldPassword" label="Mật khẩu hiện tại" rules={[{ required: true, message: 'Bắt buộc' }]}>
+                        <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu hiện tại" />
+                    </Form.Item>
+                    <Form.Item name="newPassword" label="Mật khẩu mới" rules={[{ required: true, message: 'Bắt buộc' }, { min: 4, message: 'Tối thiểu 4 ký tự' }]}>
+                        <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu mới" />
+                    </Form.Item>
+                    <Form.Item
+                        name="confirmPassword"
+                        label="Xác nhận mật khẩu mới"
+                        dependencies={['newPassword']}
+                        rules={[
+                            { required: true, message: 'Bắt buộc' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                                    return Promise.reject(new Error('Mật khẩu không khớp'));
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu mới" />
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit" block size="large">
+                        Đổi mật khẩu
+                    </Button>
+                </Form>
+            </Modal>
         </Layout>
     );
 };
