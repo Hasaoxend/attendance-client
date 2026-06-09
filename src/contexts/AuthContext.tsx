@@ -5,7 +5,7 @@ interface User {
     id: number;
     username: string;
     name: string;
-    role: 'admin' | 'union' | 'student';
+    role: 'admin' | 'union' | 'lecturer' | 'student';
     studentCode?: string;
 }
 

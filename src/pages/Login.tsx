@@ -28,10 +28,10 @@ const Login = () => {
                 return;
             }
 
-            if (res.data.user.role === 'admin') {
-                navigate('/admin');
-            } else {
+            if (res.data.user.role === 'student') {
                 navigate('/student');
+            } else {
+                navigate('/admin');
             }
         } catch (err: any) {
             message.error(err.response?.data?.message || 'Tài khoản hoặc mật khẩu không đúng');

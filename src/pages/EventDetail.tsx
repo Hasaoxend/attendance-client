@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Tag, Typography, Button, Space, Card, Row, Col, Statistic, Breadcrumb, message, Modal } from 'antd';
-import {ArrowLeftOutlined, CalendarOutlined, EnvironmentOutlined, CheckCircleOutlined, CloseCircleOutlined, QrcodeOutlined } from '@ant-design/icons';
+import {ArrowLeftOutlined, CalendarOutlined, EnvironmentOutlined, CheckCircleOutlined, CloseCircleOutlined, QrcodeOutlined, FileExcelOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../api/axios';
 import DashboardLayout from '../components/DashboardLayout';
@@ -16,6 +16,29 @@ const EventDetail = () => {
     const [attendance, setAttendance] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            const res = await api.get('/reports/export/excel', {
+                params: { type: 'attendance', eventId: id },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `diem_danh_${event?.name?.replace(/[^a-zA-Z0-9]/g, '_') || id}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            message.success('Xuất Excel thành công!');
+        } catch {
+            message.error('Lỗi xuất Excel');
+        }
+        setExporting(false);
+    };
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -76,15 +99,25 @@ const EventDetail = () => {
             key: 'checkin_time',
             width: 140,
             render: (t: any) => t ? dayjs(t).format('HH:mm DD/MM') : '-'
+        },
+        {
+            title: 'Địa chỉ IP',
+            dataIndex: 'ip_address',
+            key: 'ip_address',
+            width: 140,
+            render: (ip: string) => ip ? <Text copyable style={{ fontSize: 12 }}>{ip}</Text> : '-'
+        },
+        {
+            title: 'ID Thiết bị',
+            dataIndex: 'device_id',
+            key: 'device_id',
+            width: 180,
+            render: (d: string) => d ? <Text copyable ellipsis style={{ fontSize: 11, maxWidth: 160 }}>{d}</Text> : '-'
         }
     ];
 
-    const menuItems = [
-        { key: '/admin/events', icon: <CalendarOutlined />, label: 'Quản lý Sự kiện', onClick: () => navigate('/admin') },
-    ];
-
     return (
-        <DashboardLayout title="Chi tiết Sự kiện" menuItems={menuItems}>
+        <DashboardLayout title="Chi tiết Sự kiện">
             <Breadcrumb style={{ marginBottom: 16 }}>
                 <Breadcrumb.Item><a onClick={() => navigate('/admin')}>Quản trị</a></Breadcrumb.Item>
                 <Breadcrumb.Item>Chi tiết sự kiện</Breadcrumb.Item>
@@ -95,9 +128,14 @@ const EventDetail = () => {
                     <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')}>Quay lại</Button>
                     <Title level={3} style={{ margin: 0 }}>{event?.name}</Title>
                 </Space>
-                <Button type="primary" size="large" icon={<QrcodeOutlined />} onClick={() => setIsQRModalVisible(true)}>
-                    Hiển thị Mã QR
-                </Button>
+                <Space>
+                    <Button type="primary" size="large" icon={<FileExcelOutlined />} onClick={handleExport} loading={exporting} style={{ background: '#52c41a', borderColor: '#52c41a' }}>
+                        Xuất Excel
+                    </Button>
+                    <Button type="primary" size="large" icon={<QrcodeOutlined />} onClick={() => setIsQRModalVisible(true)}>
+                        Hiển thị Mã QR
+                    </Button>
+                </Space>
             </div>
 
             <Row gutter={[24, 24]}>
@@ -146,6 +184,7 @@ const EventDetail = () => {
                             columns={columns} 
                             rowKey="id" 
                             pagination={{ pageSize: 15 }}
+                            scroll={{ x: 1400 }}
                         />
                     </Card>
                 </Col>

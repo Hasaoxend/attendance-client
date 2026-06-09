@@ -11,7 +11,9 @@ import {
     HistoryOutlined,
     CheckCircleOutlined,
     InfoCircleOutlined,
-    UploadOutlined
+    UploadOutlined,
+    DownloadOutlined,
+    SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { Popconfirm, Tooltip } from 'antd';
 import dayjs from 'dayjs';
@@ -20,12 +22,15 @@ import api from '../api/axios';
 import DashboardLayout from '../components/DashboardLayout';
 import QRGenerator from '../components/QRGenerator';
 import MapPicker from '../components/MapPicker';
+import { useAuth } from '../contexts/AuthContext';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isLecturer = user?.role === 'lecturer';
     const screens = useBreakpoint();
     const isMobile = screens.md === false;
     
@@ -33,6 +38,13 @@ const AdminDashboard = () => {
     const [students, setStudents] = useState([]);
     const [logs, setLogs] = useState([]);
     const [activeTab, setActiveTab] = useState('events');
+
+    // Listen for sidebar tab-switch events from DashboardLayout
+    useEffect(() => {
+        const handler = (e: any) => setActiveTab(e.detail);
+        window.addEventListener('admin-tab-change', handler);
+        return () => window.removeEventListener('admin-tab-change', handler);
+    }, []);
     
     // Modals
     const [isEventModalVisible, setIsEventModalVisible] = useState(false);
@@ -320,22 +332,26 @@ const AdminDashboard = () => {
                     >
                         QR
                     </Button>
-                    <Button 
-                        size="small"
-                        icon={<EditOutlined style={{ color: '#1890ff' }} />} 
-                        onClick={() => handleOpenEditModal(record)}
-                    >
-                        Sửa
-                    </Button>
-                    <Popconfirm
-                        title="Xóa sự kiện?"
-                        onConfirm={() => handleDeleteEvent(record.id)}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        okType="danger"
-                    >
-                        <Button size="small" danger icon={<DeleteOutlined />} />
-                    </Popconfirm>
+                    {!isLecturer && (
+                        <Button 
+                            size="small"
+                            icon={<EditOutlined style={{ color: '#1890ff' }} />} 
+                            onClick={() => handleOpenEditModal(record)}
+                        >
+                            Sửa
+                        </Button>
+                    )}
+                    {!isLecturer && (
+                        <Popconfirm
+                            title="Xóa sự kiện?"
+                            onConfirm={() => handleDeleteEvent(record.id)}
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            okType="danger"
+                        >
+                            <Button size="small" danger icon={<DeleteOutlined />} />
+                        </Popconfirm>
+                    )}
                     {!isMobile && (
                         <Button 
                             size="small"
@@ -350,12 +366,7 @@ const AdminDashboard = () => {
         }
     ];
 
-    const menuItems = [
-        { key: '/admin/events', icon: <CalendarOutlined />, label: 'Quản lý Sự kiện', onClick: () => setActiveTab('events') },
-        { key: '/admin/students', icon: <TeamOutlined />, label: 'Danh sách Sinh viên', onClick: () => setActiveTab('students') },
-        { key: '/admin/logs', icon: <HistoryOutlined />, label: 'Lịch sử Điểm danh', onClick: () => setActiveTab('logs') },
-        { key: '/admin/reports', icon: <InfoCircleOutlined />, label: 'Báo cáo thống kê', path: '/admin/reports' },
-    ];
+
 
     const renderContent = () => {
         switch (activeTab) {
@@ -381,9 +392,11 @@ const AdminDashboard = () => {
                         </Row>
                         <div style={{ marginBottom: 16, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: 12 }}>
                             <Title level={4} style={{ margin: 0 }}>Sự kiện sắp tới</Title>
-                            <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateModal} block={isMobile}>
-                                Thêm Sự kiện mới
-                            </Button>
+                            {!isLecturer && (
+                                <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateModal} block={isMobile}>
+                                    Thêm Sự kiện mới
+                                </Button>
+                            )}
                         </div>
                         <Table 
                             dataSource={events} 
@@ -452,7 +465,7 @@ const AdminDashboard = () => {
     };
 
     return (
-        <DashboardLayout title="Bảng quản trị" menuItems={menuItems}>
+        <DashboardLayout title="Bảng quản trị">
             {renderContent()}
 
             <Modal

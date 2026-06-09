@@ -10,8 +10,9 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentSettings from './pages/StudentSettings';
 import CheckinSuccess from './pages/CheckinSuccess';
 import CheckinHandler from './pages/CheckinHandler';
+import AccountManagement from './pages/AccountManagement';
 
-const ProtectedRoute = ({ children, roles }: { children: ReactNode, roles?: Array<'admin' | 'union' | 'student'> }) => {
+const ProtectedRoute = ({ children, roles }: { children: ReactNode, roles?: Array<'admin' | 'union' | 'lecturer' | 'student'> }) => {
     const { user, loading } = useAuth();
     if (loading) return null;
     if (!user) return <Navigate to="/login" />;
@@ -29,11 +30,16 @@ const AppContent = () => {
             <Route 
                 path="/admin/*" 
                 element={
-                    <ProtectedRoute roles={['admin', 'union']}>
+                    <ProtectedRoute roles={['admin', 'union', 'lecturer']}>
                         <Routes>
                             <Route index element={<AdminDashboard />} />
                             <Route path="events/:id" element={<EventDetail />} />
                             <Route path="reports" element={<ReportsDashboard />} />
+                            <Route path="accounts" element={
+                                <ProtectedRoute roles={['admin']}>
+                                    <AccountManagement />
+                                </ProtectedRoute>
+                            } />
                         </Routes>
                     </ProtectedRoute>
                 } 

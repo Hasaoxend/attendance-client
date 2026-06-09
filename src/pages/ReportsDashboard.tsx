@@ -150,10 +150,6 @@ const ReportsDashboard = () => {
     };
 
     // Menu items for sidebar
-    const menuItems = [
-        { key: '/admin/events', icon: <CalendarOutlined />, label: 'Quản lý Sự kiện', path: '/admin' },
-        { key: '/admin/reports', icon: <BarChartOutlined />, label: 'Báo cáo thống kê' },
-    ];
 
     // --- Tab renderers ---
 
@@ -425,7 +421,7 @@ const ReportsDashboard = () => {
     ];
 
     return (
-        <DashboardLayout title="Báo cáo Thống kê" menuItems={menuItems}>
+        <DashboardLayout title="Báo cáo Thống kê">
             <Space style={{ marginBottom: 16 }}>
                 <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin')}>Quay lại</Button>
                 <Title level={3} style={{ margin: 0 }}>Báo cáo & Thống kê</Title>
