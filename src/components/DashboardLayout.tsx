@@ -195,7 +195,7 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
     );
 
     const sidebarContent = (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
             <div style={{ flex: 1, overflow: 'auto' }}>
                 {sideMenu}
             </div>
@@ -221,8 +221,6 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
                         top: 0,
                         bottom: 0,
                         overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
                     }}
                 >
                     <div style={{ 
