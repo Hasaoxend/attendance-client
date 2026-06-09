@@ -7,8 +7,8 @@ import {
 import {
     UserOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
     SearchOutlined, ArrowLeftOutlined, SafetyCertificateOutlined,
-    CalendarOutlined, TeamOutlined, LockOutlined, KeyOutlined,
-    CheckCircleOutlined, CloseCircleOutlined, BarChartOutlined
+    LockOutlined, KeyOutlined,
+    CheckCircleOutlined, CloseCircleOutlined
 } from '@ant-design/icons';
 import api from '../api/axios';
 import DashboardLayout from '../components/DashboardLayout';

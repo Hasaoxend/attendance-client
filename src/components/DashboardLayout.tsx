@@ -10,8 +10,7 @@ import {
     TeamOutlined,
     HistoryOutlined,
     BarChartOutlined,
-    SettingOutlined,
-    UserOutlined
+    SettingOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -112,7 +111,6 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
         return [path];
     };
 
-    const settingsPath = role === 'student' ? '/student/settings' : '/admin/accounts';
 
     // ─── User profile section at bottom of sidebar ─────────
     const userProfile = (

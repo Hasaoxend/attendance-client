@@ -7,13 +7,10 @@ import {
     DeleteOutlined,
     QrcodeOutlined,
     CalendarOutlined,
-    TeamOutlined,
     HistoryOutlined,
     CheckCircleOutlined,
     InfoCircleOutlined,
-    UploadOutlined,
-    DownloadOutlined,
-    SafetyCertificateOutlined
+    UploadOutlined
 } from '@ant-design/icons';
 import { Popconfirm, Tooltip } from 'antd';
 import dayjs from 'dayjs';
