@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, Result, Spin, Button, Typography, message, Alert } from 'antd';
-import { SafetyCertificateOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { SafetyCertificateOutlined, EnvironmentOutlined, LaptopOutlined, GlobalOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api/axios';
 
@@ -77,18 +77,25 @@ const CheckinHandler = () => {
 
         setProcessing(true);
         try {
+            // Generate/retrieve device fingerprint (same logic as QRScanner)
+            const stored = localStorage.getItem('deviceId');
+            const deviceId = stored || `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+            if (!stored) localStorage.setItem('deviceId', deviceId);
+
             const res = await api.post('/checkins', {
                 eventId: parseInt(eventId!),
                 token: token!,
                 lat: location.lat,
-                lng: location.lng
+                lng: location.lng,
+                deviceId
             });
 
             navigate('/student/success', { 
                 state: { 
                     eventName: res.data.eventName,
                     checkinTime: res.data.checkinTime,
-                    score: res.data.score
+                    score: res.data.score,
+                    trainingPoints: res.data.trainingPoints
                 } 
             });
         } catch (err: any) {
@@ -146,6 +153,8 @@ const CheckinHandler = () => {
                     description={
                         <div style={{ fontSize: 12 }}>
                             <div style={{ marginBottom: 4 }}><EnvironmentOutlined /> Đã xác định vị trí GPS</div>
+                            <div style={{ marginBottom: 4 }}><LaptopOutlined /> Đã ghi nhận thiết bị</div>
+                            <div><GlobalOutlined /> Địa chỉ IP sẽ được ghi lại</div>
                         </div>
                     }
                     type="success"

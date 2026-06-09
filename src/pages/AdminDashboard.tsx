@@ -602,12 +602,12 @@ const AdminDashboard = () => {
 
                     <Row gutter={[16, 0]}>
                         <Col xs={24} md={16}>
-                            <Form.Item label="Vị trí điểm danh" name="location" initialValue={{ lat: 10.762622, lng: 106.660172 }}>
-                                <Form.Item noStyle shouldUpdate={(prev, curr) => prev.radius !== curr.radius}>
-                                    {({ getFieldValue }) => (
-                                        <MapPicker radius={getFieldValue('radius')} />
-                                    )}
-                                </Form.Item>
+                            <Form.Item noStyle shouldUpdate={(prev, curr) => prev.radius !== curr.radius}>
+                                {({ getFieldValue }) => (
+                                    <Form.Item label="Vị trí điểm danh" name="location" initialValue={{ lat: 10.762622, lng: 106.660172 }}>
+                                        <MapPicker radius={getFieldValue('radius') || 50} />
+                                    </Form.Item>
+                                )}
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={8}>

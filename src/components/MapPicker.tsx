@@ -42,7 +42,7 @@ const MapPicker = ({ value, onChange, radius = 50 }: MapPickerProps) => {
 
         useEffect(() => {
             map.setView([position.lat, position.lng], map.getZoom());
-        }, [map]);
+        }, [map, position.lat, position.lng]);
 
         return <Marker position={[position.lat, position.lng]} icon={DefaultIcon} />;
     };
