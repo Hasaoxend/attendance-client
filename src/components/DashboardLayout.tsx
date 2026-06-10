@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { Layout, Menu, Button, Typography, Space, Drawer, Grid, Avatar, Divider, Modal, Form, Input, message } from 'antd';
+import { Layout, Menu, Button, Typography, Space, Drawer, Grid, Avatar, Divider, Modal, Form, Input, message, Upload, Spin } from 'antd';
 import { 
     LogoutOutlined, 
     SafetyCertificateOutlined, 
@@ -11,7 +11,10 @@ import {
     HistoryOutlined,
     BarChartOutlined,
     SettingOutlined,
-    LockOutlined
+    LockOutlined,
+    CameraOutlined,
+    DeleteOutlined,
+    LoadingOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,14 +44,53 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
     const screens = useBreakpoint();
     const isMobile = screens.md === false;
     
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const [collapsed, setCollapsed] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [settingsVisible, setSettingsVisible] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
     const [pwForm] = Form.useForm();
     const localUser = JSON.parse(localStorage.getItem('user') || '{}');
     const currentUser = user || localUser;
     const role = currentUser.role;
+
+    // Avatar: use custom if available, fallback to DiceBear
+    const getAvatarSrc = () => {
+        if (currentUser.avatarUrl) {
+            // If it starts with / it's a relative server path
+            const base = import.meta.env.VITE_API_URL || '';
+            return currentUser.avatarUrl.startsWith('http') ? currentUser.avatarUrl : `${base}${currentUser.avatarUrl}`;
+        }
+        return `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`;
+    };
+
+    const handleAvatarUpload = async (file: File) => {
+        setAvatarUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const res = await api.put('/auth/avatar', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            updateUser({ avatarUrl: res.data.avatarUrl });
+            message.success('Cập nhật ảnh đại diện thành công!');
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Upload thất bại');
+        } finally {
+            setAvatarUploading(false);
+        }
+        return false; // prevent ant Upload default behavior
+    };
+
+    const handleAvatarDelete = async () => {
+        try {
+            await api.delete('/auth/avatar');
+            updateUser({ avatarUrl: '' });
+            message.success('Đã xóa ảnh đại diện');
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Xóa thất bại');
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -145,9 +187,12 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
             }}>
                 <Avatar 
                     size={collapsed ? 32 : 40} 
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`}
+                    src={getAvatarSrc()}
                     style={{ flexShrink: 0, cursor: 'pointer', border: '2px solid rgba(255,255,255,0.3)' }}
-                    onClick={() => navigate(role === 'student' ? '/student/settings' : '/student/settings')}
+                    onClick={() => {
+                        if (role === 'student') navigate('/student/settings');
+                        else setSettingsVisible(true);
+                    }}
                 />
                 {!collapsed && (
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -308,7 +353,7 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
                     <Space size={isMobile ? "small" : "large"}>
                         {!isMobile && (
                             <Space>
-                                <Avatar size={28} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`} />
+                                <Avatar size={28} src={getAvatarSrc()} />
                                 <Typography.Text strong>{currentUser.name}</Typography.Text>
                             </Space>
                         )}
@@ -338,15 +383,49 @@ const DashboardLayout = ({ children, title, contentStyle, contentClassName }: Da
                 width={420}
             >
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                    <Avatar 
-                        size={80} 
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`}
-                        style={{ border: '3px solid #1890ff', marginBottom: 12 }}
-                    />
+                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: 12 }}>
+                        <Spin spinning={avatarUploading} indicator={<LoadingOutlined />}>
+                            <Avatar 
+                                size={80} 
+                                src={getAvatarSrc()}
+                                style={{ border: '3px solid #1890ff' }}
+                            />
+                        </Spin>
+                        <Upload
+                            showUploadList={false}
+                            accept="image/png,image/jpeg,image/webp"
+                            beforeUpload={(file) => { handleAvatarUpload(file); return false; }}
+                        >
+                            <Button
+                                type="primary"
+                                shape="circle"
+                                size="small"
+                                icon={<CameraOutlined />}
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                                }}
+                            />
+                        </Upload>
+                    </div>
                     <div>
                         <Text strong style={{ fontSize: 18, display: 'block' }}>{currentUser.name}</Text>
                         <Text type="secondary">@{currentUser.username}</Text>
                     </div>
+                    {currentUser.avatarUrl && (
+                        <Button
+                            type="link"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined />}
+                            onClick={handleAvatarDelete}
+                            style={{ marginTop: 4 }}
+                        >
+                            Xóa ảnh đại diện
+                        </Button>
+                    )}
                 </div>
 
                 <Divider>Đổi mật khẩu</Divider>

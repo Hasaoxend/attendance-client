@@ -7,18 +7,24 @@ import {
     Button, 
     message, 
     Avatar,
-    Grid
+    Grid,
+    Upload,
+    Spin
 } from 'antd';
 import { 
     ArrowLeftOutlined, 
     UserOutlined, 
     SafetyCertificateOutlined, 
     SaveOutlined,
-    LockOutlined
+    LockOutlined,
+    CameraOutlined,
+    DeleteOutlined,
+    LoadingOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import DashboardLayout from '../components/DashboardLayout';
+import { useAuth } from '../contexts/AuthContext';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -31,7 +37,19 @@ const StudentSettings = () => {
     const [pwForm] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [pwLoading, setPwLoading] = useState(false);
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const { user, updateUser } = useAuth();
+    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentUser = user || localUser;
+
+    // Avatar: use custom if available, fallback to DiceBear
+    const getAvatarSrc = () => {
+        if (currentUser.avatarUrl) {
+            const base = import.meta.env.VITE_API_URL || '';
+            return currentUser.avatarUrl.startsWith('http') ? currentUser.avatarUrl : `${base}${currentUser.avatarUrl}`;
+        }
+        return `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`;
+    };
 
     // Unified Light Theme
     const T = {
@@ -46,17 +64,16 @@ const StudentSettings = () => {
 
     useEffect(() => {
         form.setFieldsValue({
-            name: user.name,
-            username: user.username,
-            email: user.email || ''
+            name: currentUser.name,
+            username: currentUser.username,
+            email: currentUser.email || ''
         });
-    }, [user, form]);
+    }, [currentUser, form]);
 
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
-            const updatedUser = { ...user, name: values.name };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            updateUser({ name: values.name });
             message.success('Cập nhật hồ sơ thành công!');
         } catch (error) {
             console.error(error);
@@ -82,6 +99,34 @@ const StudentSettings = () => {
         }
     };
 
+    const handleAvatarUpload = async (file: File) => {
+        setAvatarUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const res = await api.put('/auth/avatar', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            updateUser({ avatarUrl: res.data.avatarUrl });
+            message.success('Cập nhật ảnh đại diện thành công!');
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Upload thất bại');
+        } finally {
+            setAvatarUploading(false);
+        }
+        return false;
+    };
+
+    const handleAvatarDelete = async () => {
+        try {
+            await api.delete('/auth/avatar');
+            updateUser({ avatarUrl: '' });
+            message.success('Đã xóa ảnh đại diện');
+        } catch (err: any) {
+            message.error(err.response?.data?.message || 'Xóa thất bại');
+        }
+    };
+
     const menuItems = [
         { key: '/student', label: 'Sự kiện', icon: <UserOutlined />, path: '/student' },
     ];
@@ -93,9 +138,44 @@ const StudentSettings = () => {
                 style={{ marginBottom: 20, background: T.cardBg, border: T.cardBorder, borderRadius: 16 }}
             >
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                    <Avatar size={100} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
-                    <Title level={4} style={{ color: T.textPrimary, marginTop: 16, marginBottom: 0 }}>{user.name}</Title>
-                    <Text style={{ color: T.textSecondary }}>Mã sinh viên: {user.username}</Text>
+                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }}>
+                        <Spin spinning={avatarUploading} indicator={<LoadingOutlined />}>
+                            <Avatar size={100} src={getAvatarSrc()} />
+                        </Spin>
+                        <Upload
+                            showUploadList={false}
+                            accept="image/png,image/jpeg,image/webp"
+                            beforeUpload={(file) => { handleAvatarUpload(file); return false; }}
+                        >
+                            <Button
+                                type="primary"
+                                shape="circle"
+                                size="small"
+                                icon={<CameraOutlined />}
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 2,
+                                    right: 2,
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                                }}
+                            />
+                        </Upload>
+                    </div>
+                    {currentUser.avatarUrl && (
+                        <div>
+                            <Button
+                                type="link"
+                                danger
+                                size="small"
+                                icon={<DeleteOutlined />}
+                                onClick={handleAvatarDelete}
+                            >
+                                Xóa ảnh đại diện
+                            </Button>
+                        </div>
+                    )}
+                    <Title level={4} style={{ color: T.textPrimary, marginTop: 8, marginBottom: 0 }}>{currentUser.name}</Title>
+                    <Text style={{ color: T.textSecondary }}>Mã sinh viên: {currentUser.username}</Text>
                 </div>
 
                 <Form form={form} layout="vertical" onFinish={onFinish}>

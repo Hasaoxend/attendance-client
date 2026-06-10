@@ -7,12 +7,14 @@ interface User {
     name: string;
     role: 'admin' | 'union' | 'lecturer' | 'student';
     studentCode?: string;
+    avatarUrl?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     login: (userData: User, token: string) => void;
     logout: () => void;
+    updateUser: (partial: Partial<User>) => void;
     loading: boolean;
 }
 
@@ -46,8 +48,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
     };
 
+    const updateUser = (partial: Partial<User>) => {
+        setUser(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev, ...partial };
+            localStorage.setItem('user', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
             {children}
         </AuthContext.Provider>
     );
