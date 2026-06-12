@@ -68,7 +68,7 @@ const Login = () => {
                     
                     <div style={{ textAlign: 'center', marginTop: 16 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                            © 2024 Đề tài Nghiên cứu Khoa học
+                            Đồ Án Tốt Nghiệp 2026
                         </Text>
                     </div>
                 </Card>
