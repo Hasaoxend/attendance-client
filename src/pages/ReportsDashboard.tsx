@@ -412,12 +412,12 @@ const ReportsDashboard = () => {
     );
 
     const tabItems = [
-        { key: 'overview', label: <span><BarChartOutlined /> 7.1 Thống kê hoạt động</span>, children: renderOverview() },
-        { key: 'registrations', label: <span><TeamOutlined /> 7.2 Đăng ký</span>, children: renderRegistrations() },
-        { key: 'attendance', label: <span><CheckCircleOutlined /> 7.3 Điểm danh</span>, children: renderAttendance() },
-        { key: 'training', label: <span><TrophyOutlined /> 7.4 Điểm RL</span>, children: renderTrainingPoints() },
-        { key: 'activity', label: <span><SearchOutlined /> 7.5 Tra cứu</span>, children: renderActivityLog() },
-        { key: 'export', label: <span><DownloadOutlined /> 7.6 Xuất Excel</span>, children: renderExport() },
+        { key: 'overview', label: <span><BarChartOutlined />  Thống kê hoạt động</span>, children: renderOverview() },
+        { key: 'registrations', label: <span><TeamOutlined />  Đăng ký</span>, children: renderRegistrations() },
+        { key: 'attendance', label: <span><CheckCircleOutlined /> Điểm danh</span>, children: renderAttendance() },
+        { key: 'training', label: <span><TrophyOutlined /> Điểm RL</span>, children: renderTrainingPoints() },
+        { key: 'activity', label: <span><SearchOutlined /> Tra cứu</span>, children: renderActivityLog() },
+        { key: 'export', label: <span><DownloadOutlined /> Xuất Excel</span>, children: renderExport() },
     ];
 
     return (
