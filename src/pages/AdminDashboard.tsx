@@ -269,7 +269,7 @@ const AdminDashboard = () => {
             key: 'time',
             width: 130,
             render: (record: any) => (
-                <Text style={{ fontSize: '12px' }}>
+                <Text style={{ fontSize: '16px' }}>
                     {dayjs(record.start_time).format('DD/MM HH:mm')} - {dayjs(record.end_time).format('HH:mm')}
                 </Text>
             )
